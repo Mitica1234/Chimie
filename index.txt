@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            background-image: url('alchene.img'); /* Schimbați calea către imaginea dorită */
+            background-size: cover;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 5px;
+        }
+
+        #game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 600px;
+        }
+
+        .card {
+            width: 400px;
+            height: 250px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.5s, box-shadow 0.3s;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option {
+            margin: 5px;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 0px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #message {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: red; /* Adăugat pentru a face mesajele roșii */
+        }
+
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .correct {
+            color: green;
+        }
+    </style>
+    <title>Joc Alchene</title>
+</head>
+<body>
+    <header>
+        <h1>Joc Alchene</h1>
+    </header>
+
+    <div id="game-container">
+        <!-- Adăugați cărți și întrebări aici -->
+    </div>
+
+    <footer>
+        <div id="message"></div>
+        <div id="result" style="display: none;"></div>
+        <audio id="correctAudio" src="sunete1\corect.wav"></audio>
+        <audio id="incorrectAudio" src="sunete\gresit.wav"></audio>
+        <p>&copy; 2024 Joc Alchene</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const gameContainer = document.getElementById('game-container');
+            const messageDisplay = document.getElementById('message');
+            const resultDisplay = document.getElementById('result');
+            let score = 0;
+            let currentQuestion = 0;
+
+            const questions = [
+                {
+                    question: "Care este formula chimică a etenei?",
+                    options: ["C2H2", "C2H4", "C3H6", "C4H8"],
+                    correctAnswer: "C2H4"
+                },
+                {   question: " Alchenele sunt hidrocarburi care prezinta in molecula o legatură ......... carbon-carbon. ",
+                    options: ["simpla", "dubla"],
+                    correctAnswer: "dubla"
+                },
+                {   question: "Forma generala a alchenelor este...........",
+                    options: ["CnH2n+2", "CnH2n"],
+                    correctAnswer: "CnH2n"
+ 		},
+                {   question: "1-butena si 2-butena sunt izomeri de ............",
+                    options: ["pozitie", "catena"],
+                    correctAnswer: "pozitie"
+ 		},
+		{   question: "Alchenele ......... solubile in apa.",
+                    options: ["sunt", "nu sunt"],
+                    correctAnswer: "nu sunt"
+		},
+		{   question: " Al doilea termen din clasa alchenelor se numeste ............",
+                    options: ["etena", "propena"],
+                    correctAnswer: "propena"
+		},
+ 	        {   question: "Prin aditia apei la 1-butena se obtine ...........",
+                    options: ["1-butanol", "2-butanol"],
+                    correctAnswer: "2-butanol"
+                },
+                // Adăugați mai multe întrebări și răspunsuri aici
+            ];
+
+            function appendCard() {
+                // Obțineți întrebarea curentă
+                const currentQuestionData = questions[currentQuestion];
+
+                // Crearea cardului pentru întrebare
+                const card = document.createElement('div');
+                card.classList.add('card');
+
+                // Adăugați întrebarea și opțiunile
+                card.innerHTML = `
+                    <div>${currentQuestionData.question}</div>
+                    <div class="options">
+                        ${currentQuestionData.options.map(option => `<label class="option"><input type="radio" name="answer" value="${option}"> ${option}</label>`).join('')}
+                    </div>
+                `;
+
+                // Adăugare atribut pentru a salva răspunsul corect
+                card.dataset.correct = currentQuestionData.correctAnswer;
+
+                // Adăugare eveniment pentru răspuns
+                card.addEventListener('click', flipCard);
+
+                // Adăugare card în container
+                gameContainer.innerHTML = '';
+                gameContainer.appendChild(card);
+            }
+
+            function playCorrectSound() {
+                const correctAudio = document.getElementById('correctAudio');
+                correctAudio.currentTime = 0; // Resetați timpul audio pentru a permite redarea repetată
+                correctAudio.play();
+            }
+
+            function playIncorrectSound() {
+                const incorrectAudio = document.getElementById('incorrectAudio');
+                incorrectAudio.currentTime = 0; // Resetați timpul audio pentru a permite redarea repetată
+                incorrectAudio.play();
+            }
+
+            function flipCard() {
+                if (this.classList.contains('flip')) return;
+
+                this.classList.add('flip');
+
+                // Verificați răspunsul
+                const selectedOption = document.querySelector('input[name="answer"]:checked');
+                if (selectedOption) {
+                    if (this.dataset.correct === selectedOption.value) {
+                        this.querySelector('.options').classList.add('correct');
+                        score++;
+                        messageDisplay.classList.add('correct');
+                        playCorrectSound();
+                    } else {
+                        this.querySelector('.options').classList.add('incorrect');
+                        messageDisplay.textContent = 'Răspuns greșit!';
+                        messageDisplay.classList.remove('correct');
+                        playIncorrectSound(); // Adăugați redarea sunetului incorect
+                    }
+
+                    // Verificați dacă utilizatorul a răspuns corect la toate întrebările
+                    if (currentQuestion === questions.length - 1) {
+                        // Afișați numărul de întrebări corecte din total
+                        resultDisplay.textContent = `Răspunsuri corecte: ${score} / ${questions.length}`;
+                        resultDisplay.style.display = 'block';
+                    } else {
+                        // Treci la următoarea întrebare după un moment
+                        setTimeout(() => {
+                            nextQuestion();
+                        }, 1000);
+                    }
+                }
+            }
+
+            function nextQuestion() {
+                // Incrementați indicele întrebării curente
+                currentQuestion++;
+
+                // Resetați afișajul de mesaje
+                messageDisplay.textContent = '';
+                messageDisplay.classList.remove('correct');
+
+                // Adăugați cărțile pentru următoarea întrebare
+                appendCard();
+            }
+
+            // Inițializați jocul cu prima întrebare
+            appendCard();
+        });
+    </script>
+</body>
+</html>
